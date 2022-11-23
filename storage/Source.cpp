@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -8,10 +9,6 @@ class Storage
 	string address;
 };
 
-class Area
-{
-
-};
 
 class Date
 {
@@ -97,6 +94,20 @@ public:
 		set_count(count_product);
 	};
 
+	void set_name(string name_of_product) {
+		name = name_of_product;
+	}
+	string get_name() {
+		return name;
+	}
+
+	void set_type(int type_of_product) {
+		type = type_of_product;
+	}
+	int get_type() {
+		return type;
+	}
+
 	Product add_prod(int count) {
 		if (count < 0) {
 			return sub_prod(-count);
@@ -117,14 +128,99 @@ public:
 		set_count(get_count() - count);
 		return *this;
 	}
+
+	int operator ==(Product& prod) {
+		if (name == prod.name) return 1;
+		return 0;
+	};
+
 };
+
+class Area
+{
+	int type;
+	vector<Product> product;
+	int quantity_prod_now;
+	int max_count_prod;
+public:
+	Area(int type_prod = 1, int max = 999) {
+		type = type_prod;
+		max_count_prod = max;
+		Product prod;
+		product.push_back(prod);
+		quantity_prod_now = 0;
+	}
+
+	int get_quantity_prod_now() { return quantity_prod_now; };
+
+	void add_products(Product& prod) {
+		int i = 0;
+		for (; i < product.size(); i++) {
+			if (product[i] == prod) {
+				if ((prod.get_count() + quantity_prod_now) > max_count_prod) {
+					printf("Added only %d products! Storage is full!", max_count_prod - quantity_prod_now);
+					quantity_prod_now = max_count_prod;
+					product[i].add_prod(max_count_prod - quantity_prod_now);
+					return;
+				}
+				quantity_prod_now += prod.get_count();
+				product[i].add_prod(prod.get_count());
+				return;
+			}
+		}
+		if (i == product.size()) {
+			if ((prod.get_count() + quantity_prod_now) > max_count_prod) {
+				printf("Added only %d products! Storage is full!", max_count_prod - quantity_prod_now);
+				quantity_prod_now = max_count_prod;
+				product.push_back(prod);
+			}
+			quantity_prod_now += prod.get_count();
+			product.push_back(prod);
+		}
+	};
+
+	void sub_products(Product& prod) {
+		int i = 0;
+		for (; i < product.size(); i++) {
+			if (product[i] == prod) {
+				if (prod.get_count() > product[i].get_count()) {
+					printf("Subed only %d products! Storage is empty!", product[i].get_count());
+					product[i].set_count(0);
+					if (prod.get_count() > quantity_prod_now) {
+						quantity_prod_now = 0;
+						return;
+					}
+					quantity_prod_now -= prod.get_count();
+					return;
+				}
+				quantity_prod_now -= prod.get_count();
+				product[i].sub_prod(prod.get_count());
+				return;
+			}
+		}
+		if (i == product.size()) {
+			cout << "Product " << prod.get_name() << " not found\n";
+		}
+	};
+
+};
+
 
 int main()
 {
+	Area area;
+
 	Product a;
 	a.set_delivery_date(3, 6, 2022);
 	a.set_count(100);
 	a.add_prod(100);
-	cout << a.get_count() << "\n";
-	cout << a.get_delivery_date() << "\n";
+
+	Product b;
+	b.set_name("jkl");
+
+	area.add_products(a);
+	cout << area.get_quantity_prod_now() << "\n";
+
+	area.sub_products(b);
+
 }
