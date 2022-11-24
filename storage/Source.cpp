@@ -4,12 +4,6 @@
 
 using namespace std;
 
-class Storage
-{
-	string address;
-};
-
-
 class Date
 {
 	int m_day;
@@ -151,6 +145,12 @@ public:
 		quantity_prod_now = 0;
 	}
 
+	int get_type() { return type; }
+	void set_type(int new_type) { type = new_type; }
+
+	int get_max_count_prod() { return max_count_prod; }
+	void set_max_count_prod(int new_max_count_prod) { max_count_prod = new_max_count_prod; }
+
 	int get_quantity_prod_now() { return quantity_prod_now; };
 
 	void add_products(Product& prod) {
@@ -202,6 +202,67 @@ public:
 			cout << "Product " << prod.get_name() << " not found\n";
 		}
 	};
+
+	int get_count_of_prod(Product prod) {
+		int i = 0;
+		for (; i < product.size(); i++) {
+			if (product[i] == prod) {
+				return product[i].get_count();
+			}
+		}
+		if (i == product.size()) {
+			cout << "Product " << prod.get_name() << " not found\n";
+			return 0;
+		}
+		return 0;
+	}
+
+	int operator ==(Area& _area) {
+		if (type == _area.get_type()) return 1;
+		else return 0;
+	}
+
+};
+
+
+class Storage
+{
+	string address;
+	vector<Area> area;
+public:
+	Storage(string address_of_storage, int count_of_area) {
+		address = address_of_storage;
+		for (int i = 1; i <= count_of_area; i++)
+		{
+			Area new_area(i, 999);
+			area.push_back(new_area);
+		}
+	}
+
+	void change_type_area(int old_type, int new_type) {
+		int i = 0;
+		for (; i < area.size(); i++) {
+			if (area[i].get_type() == old_type) {
+				return area[i].set_type(new_type);
+			}
+		}
+		if (i == area.size()) {
+			printf("This type '%d' is not found!", old_type);
+		}
+	}
+
+	void change_max_count_prod_of_area(int type, int new_max_count) {
+		int i = 0;
+		for (; i < area.size(); i++) {
+			if (area[i].get_type() == type) {
+				return area[i].set_max_count_prod(new_max_count);
+			}
+		}
+		if (i == area.size()) {
+			printf("This type '%d' is not found!", type);
+		}
+	}
+
 
 };
 
