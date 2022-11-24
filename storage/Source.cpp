@@ -42,14 +42,18 @@ public:
 
 class Report
 {
+	string name_of_product;
 	Date delivery_date;
-	Date ship_date;
-	int count_in_area;
+	Date send_date;
+	int count;
+	int type_of_report;
 public:
-	Report(int day = 1, int month = 1, int year = 2000, int count = 1) {
+	Report(string name = "prod", int count_of_prod = 1, int type_of_rep = 0, int day = 1, int month = 1, int year = 2000) {
+		name_of_product = name;
+		type_of_report = type_of_rep;
 		delivery_date.set_date(day, month, year);
-		ship_date.set_date(day, month, year + 20);
-		count_in_area = count;
+		send_date.set_date(day, month, year);
+		count = count_of_prod;
 	};
 
 	void set_delivery_date(int day, int month, int year) {
@@ -59,33 +63,44 @@ public:
 		return delivery_date.get_date();
 	}
 
-	void set_ship_date(int day, int month, int year) {
-		ship_date.set_date(day, month, year);
+	void set_send_date(int day, int month, int year) {
+		send_date.set_date(day, month, year);
 	};
-	string get_ship_date() {
-		return ship_date.get_date();
+	string get_send_date() {
+		return send_date.get_date();
 	}
 
-	void set_count(int count) {
-		if (count < 0) {
+	void set_count(int count_of_prod) {
+		if (count_of_prod < 0) {
 			printf("Count is not valid! /set 0/\n");
-			count = 0;
+			count_of_prod = 0;
 		}
-		count_in_area = count;
+		count = count_of_prod;
 	};
 
-	int get_count() { return count_in_area; };
+	int get_count() { return count; };
+
+	int get_type() { return type_of_report; }
+
+	friend ostream& operator<<(ostream& r, Report& report)
+	{
+		if (report.get_type() == 1) r << "\n" << "send\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date();
+		else r << "\n" << "delivery\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date();
+		return r;
+	}
+
 };
 
-class Product : public Report
+class Product
 {
 	string name;
 	int type;
+	int count;
 public:
 	Product(string name_product = "prod", int type_product = 1, int count_product = 1) {
 		name = name_product;
 		type = type_product;
-		set_count(count_product);
+		count = count_product;
 	};
 
 	void set_name(string name_of_product) {
@@ -102,24 +117,27 @@ public:
 		return type;
 	}
 
-	Product add_prod(int count) {
-		if (count < 0) {
-			return sub_prod(-count);
+	void set_count(int count_of_prod) { count = count_of_prod; }
+	int get_count() { return count; }
+
+	Product add_prod(int count_of_product) {
+		if (count_of_product < 0) {
+			return sub_prod(-count_of_product);
 		}
-		set_count(count + get_count());
+		count += count_of_product;
 		return *this;
 	}
 
-	Product sub_prod(int count) {
-		if (count < 0) {
-			return add_prod(-count);
+	Product sub_prod(int count_of_product) {
+		if (count_of_product < 0) {
+			return add_prod(-count_of_product);
 		}
-		if (count > get_count()) {
-			printf("Запрос на изъятие %d продуктов исправлен на %d продуктов (максимальное количество)", count, get_count());
-			set_count(0);
+		if (count_of_product > count) {
+			printf("Запрос на изъятие %d продуктов исправлен на %d продуктов (максимальное количество)", count_of_product, count);
+			count = 0;
 			return *this;
 		}
-		set_count(get_count() - count);
+		count -= count_of_product;
 		return *this;
 	}
 
@@ -153,7 +171,7 @@ public:
 
 	int get_quantity_prod_now() { return quantity_prod_now; };
 
-	void add_products(Product& prod) {
+	int add_products(Product& prod) {
 		int i = 0;
 		for (; i < product.size(); i++) {
 			if (product[i] == prod) {
@@ -161,11 +179,11 @@ public:
 					printf("Added only %d products! Storage is full!", max_count_prod - quantity_prod_now);
 					quantity_prod_now = max_count_prod;
 					product[i].add_prod(max_count_prod - quantity_prod_now);
-					return;
+					return max_count_prod - quantity_prod_now;
 				}
 				quantity_prod_now += prod.get_count();
 				product[i].add_prod(prod.get_count());
-				return;
+				return quantity_prod_now;
 			}
 		}
 		if (i == product.size()) {
@@ -173,13 +191,15 @@ public:
 				printf("Added only %d products! Storage is full!", max_count_prod - quantity_prod_now);
 				quantity_prod_now = max_count_prod;
 				product.push_back(prod);
+				return max_count_prod - quantity_prod_now;
 			}
 			quantity_prod_now += prod.get_count();
 			product.push_back(prod);
 		}
+		return quantity_prod_now;
 	};
 
-	void sub_products(Product& prod) {
+	int sub_products(Product& prod) {
 		int i = 0;
 		for (; i < product.size(); i++) {
 			if (product[i] == prod) {
@@ -188,19 +208,20 @@ public:
 					product[i].set_count(0);
 					if (prod.get_count() > quantity_prod_now) {
 						quantity_prod_now = 0;
-						return;
+						return 0;
 					}
 					quantity_prod_now -= prod.get_count();
-					return;
+					return quantity_prod_now;
 				}
 				quantity_prod_now -= prod.get_count();
 				product[i].sub_prod(prod.get_count());
-				return;
+				return quantity_prod_now;
 			}
 		}
 		if (i == product.size()) {
 			cout << "Product " << prod.get_name() << " not found\n";
 		}
+		return 0;
 	};
 
 	int get_count_of_prod(Product prod) {
@@ -229,14 +250,17 @@ class Storage
 {
 	string address;
 	vector<Area> area;
+	vector<Report> report;
 public:
-	Storage(string address_of_storage, int count_of_area) {
+	Storage(string address_of_storage = "defolt", int count_of_area = 1) {
 		address = address_of_storage;
 		for (int i = 1; i <= count_of_area; i++)
 		{
 			Area new_area(i, 999);
 			area.push_back(new_area);
 		}
+		Report rep;
+		report.push_back(rep);
 	}
 
 	void change_type_area(int old_type, int new_type) {
@@ -263,25 +287,57 @@ public:
 		}
 	}
 
+	void add_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
+		int i = 0;
+		for (; i < area.size(); i++) {
+			if (area[i].get_type() == type_of_product) {
+				Product new_prod(name_of_product, type_of_product, count_of_product);
+				int new_count = area[i].add_products(new_prod);
+				Report new_report(name_of_product, new_count, 0, date.get_day(), date.get_month(), date.get_year());
+				report.push_back(new_report);
+				return;
+			}
+		}
+		if (i == area.size()) {
+			printf("This type '%d' is not found!", type_of_product);
+		}
+	}
 
+	void sub_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
+		int i = 0;
+		for (; i < area.size(); i++) {
+			if (area[i].get_type() == type_of_product) {
+				Product new_prod(name_of_product, type_of_product, count_of_product);
+				int new_count = area[i].sub_products(new_prod);
+				Report new_report(name_of_product, new_count, 1, date.get_day(), date.get_month(), date.get_year());
+				report.push_back(new_report);
+				return;
+			}
+		}
+		if (i == area.size()) {
+			printf("This type '%d' is not found!", type_of_product);
+		}
+	}
+
+	vector<Report> get_all_rep() { return report; }
 };
 
 
 int main()
 {
-	Area area;
+	Storage storage("Tosmk", 3);
+	Date today(24, 11, 2022);
+	Date tomorrow(25, 11, 2022);
 
-	Product a;
-	a.set_delivery_date(3, 6, 2022);
-	a.set_count(100);
-	a.add_prod(100);
+	storage.add_products("table", 1, 17, today);
+	storage.add_products("fork", 2, 789, today);
 
-	Product b;
-	b.set_name("jkl");
+	storage.sub_products("table", 1, 10, tomorrow);
 
-	area.add_products(a);
-	cout << area.get_quantity_prod_now() << "\n";
+	for (int i = 1; i < storage.get_all_rep().size(); i++)
+	{
+		cout << storage.get_all_rep()[i];
+	}
 
-	area.sub_products(b);
-
+	return 0;
 }
