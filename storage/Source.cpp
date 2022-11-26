@@ -11,7 +11,7 @@ class Date
 	int m_year;
 public:
 	Date(int day = 1, int month = 1, int year = 2000) {
-		if ((day * month * year) == 0) {
+		if ((day <= 0) || (month <= 0) || (year <= 0)) {
 			printf("Date is not valid! /set defolt/\n");
 			day = 1; month = 1; year = 2000;
 		}
@@ -21,9 +21,8 @@ public:
 	string get_date() {
 		return (string)(to_string(m_day) + "." + to_string(m_month) + "." + to_string(m_year));
 	};
-
 	void set_date(int day, int month, int year) {
-		if ((day * month * year) == 0) {
+		if ((day <= 0) || (month <= 0) || (year <= 0)) {
 			printf("Date is not valid! /set defolt/\n");
 			day = 1; month = 1; year = 2000;
 		}
@@ -35,6 +34,7 @@ public:
 	int get_day() { return m_day; };
 	int get_month() { return m_month; };
 	int get_year() { return m_year; };
+
 	void set_day(int day) { if (day > 0) m_day = day; };
 	void set_month(int month) { if (month > 0) m_month = month; };
 	void set_year(int year) { if (year > 0) m_year = year; };
@@ -77,18 +77,17 @@ public:
 		}
 		count = count_of_prod;
 	};
-
 	int get_count() { return count; };
 
 	int get_type() { return type_of_report; }
 
 	friend ostream& operator<<(ostream& r, Report& report)
 	{
+		if (&report == NULL) return r;
 		if (report.get_type() == 1) r << "\n" << "send\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date();
 		else r << "\n" << "delivery\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date();
 		return r;
 	}
-
 };
 
 class Product
@@ -100,12 +99,17 @@ public:
 	Product(string name_product = "prod", int type_product = 1, int count_product = 1) {
 		name = name_product;
 		type = type_product;
-		count = count_product;
+		if (count_product < 0) {
+			printf("Count is not valid! /set 0/\n");
+			count = 0;
+		}
+		else count = count_product;
 	};
 
 	void set_name(string name_of_product) {
 		name = name_of_product;
 	}
+
 	string get_name() {
 		return name;
 	}
@@ -113,11 +117,19 @@ public:
 	void set_type(int type_of_product) {
 		type = type_of_product;
 	}
+
 	int get_type() {
 		return type;
 	}
 
-	void set_count(int count_of_prod) { count = count_of_prod; }
+	void set_count(int count_of_prod) {
+		if (count_of_prod < 0) {
+			printf("Count is not valid! /set 0/\n");
+			count = 0;
+		}
+		else count = count_of_prod;
+	}
+
 	int get_count() { return count; }
 
 	Product add_prod(int count_of_product) {
@@ -142,7 +154,7 @@ public:
 	}
 
 	int operator ==(Product& prod) {
-		if (name == prod.name) return 1;
+		if ((name == prod.name) || (this == &prod)) return 1;
 		return 0;
 	};
 
@@ -157,17 +169,29 @@ class Area
 public:
 	Area(int type_prod = 1, int max = 999) {
 		type = type_prod;
-		max_count_prod = max;
+		if (max < 0) {
+			printf("MAX count is not valid! /set 999/\n");
+			max_count_prod = 999;
+		}
+		else max_count_prod = max;
 		Product prod;
 		product.push_back(prod);
 		quantity_prod_now = 0;
 	}
 
 	int get_type() { return type; }
+
 	void set_type(int new_type) { type = new_type; }
 
 	int get_max_count_prod() { return max_count_prod; }
-	void set_max_count_prod(int new_max_count_prod) { max_count_prod = new_max_count_prod; }
+
+	void set_max_count_prod(int new_max_count_prod) {
+		if (new_max_count_prod < 0) {
+			printf("MAX count is not valid! /set 999/\n");
+			max_count_prod = 999;
+		}
+		else max_count_prod = new_max_count_prod;
+	}
 
 	int get_quantity_prod_now() { return quantity_prod_now; };
 
@@ -243,6 +267,18 @@ public:
 		else return 0;
 	}
 
+	Product* find_product(string _name) {
+		int i = 0;
+		for (; i < product.size(); i++) {
+			if (product[i].get_name() == _name) {
+				return &product[i];
+			}
+		}
+		if (i == product.size()) {
+			return NULL;
+		}
+	}
+
 };
 
 
@@ -252,11 +288,26 @@ class Storage
 	vector<Area> area;
 	vector<Report> report;
 public:
-	Storage(string address_of_storage = "defolt", int count_of_area = 1) {
+	Storage(string address_of_storage = "defolt", int count_of_area = 1, int max_count_of_prod = 999) {
 		address = address_of_storage;
-		for (int i = 1; i <= count_of_area; i++)
+
+		int new_max_count_of_prod = 0;
+		if (max_count_of_prod < 0) {
+			printf("MAX count of product in area is not valid! /set 999/\n");
+			new_max_count_of_prod = 999;
+		}
+		else new_max_count_of_prod = max_count_of_prod;
+
+		int new_count_of_area = 0;
+		if (count_of_area <= 0) {
+			printf("Count of area is not valid! /set 1/\n");
+			new_count_of_area = 1;
+		}
+		else new_count_of_area = count_of_area;
+
+		for (int i = 1; i <= new_count_of_area; i++)
 		{
-			Area new_area(i, 999);
+			Area new_area(i, new_max_count_of_prod);
 			area.push_back(new_area);
 		}
 		Report rep;
@@ -276,10 +327,18 @@ public:
 	}
 
 	void change_max_count_prod_of_area(int type, int new_max_count) {
+
+		int _new_max_count = 0;
+		if (new_max_count < 0) {
+			printf("New MAX count of product in area is not valid! /set 999/\n");
+			_new_max_count = 999;
+		}
+		else _new_max_count = new_max_count;
+
 		int i = 0;
 		for (; i < area.size(); i++) {
 			if (area[i].get_type() == type) {
-				return area[i].set_max_count_prod(new_max_count);
+				return area[i].set_max_count_prod(_new_max_count);
 			}
 		}
 		if (i == area.size()) {
@@ -288,6 +347,8 @@ public:
 	}
 
 	void add_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
+		if (count_of_product < 0) return sub_products(name_of_product, type_of_product, -count_of_product, date);
+
 		int i = 0;
 		for (; i < area.size(); i++) {
 			if (area[i].get_type() == type_of_product) {
@@ -304,6 +365,8 @@ public:
 	}
 
 	void sub_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
+		if (count_of_product < 0) return add_products(name_of_product, type_of_product, -count_of_product, date);
+
 		int i = 0;
 		for (; i < area.size(); i++) {
 			if (area[i].get_type() == type_of_product) {
@@ -320,6 +383,32 @@ public:
 	}
 
 	vector<Report> get_all_rep() { return report; }
+
+	Product* find_prod(string _name, int _type) {
+		int i = 0;
+		for (; i < area.size(); i++) {
+			if (area[i].get_type() == _type) {
+				return area[i].find_product(_name);
+			}
+		}
+		if (i == area.size()) {
+			printf("This type '%d' is not found!", _type);
+		}
+	}
+
+	Product* find_prod(string _name) {
+		int i = 0;
+		for (; i < area.size(); i++) {
+			Product* find;
+			find = area[i].find_product(_name);
+			if (find != NULL) {
+				return area[i].find_product(_name);
+			}
+		}
+		if (i == area.size()) {
+			cout << "Product " << _name << " not found\n";
+		}
+	}
 };
 
 
