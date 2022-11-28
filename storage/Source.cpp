@@ -182,8 +182,6 @@ public:
 			max_count_prod = 999;
 		}
 		else max_count_prod = max;
-		Product prod;
-		product.push_back(prod);
 		quantity_prod_now = 0;
 	}
 
@@ -207,28 +205,31 @@ public:
 		int i = 0;
 		for (; i < product.size(); i++) {
 			if (product[i] == prod) {
-				if ((prod.get_count() + quantity_prod_now) > max_count_prod) {
-					printf("Added only %d products! Storage is full!", max_count_prod - quantity_prod_now);
+				if ((quantity_prod_now + prod.get_count()) > max_count_prod) {
+					int save = max_count_prod - quantity_prod_now;
+					printf("Added only %d products! Storage is full!", save);
 					quantity_prod_now = max_count_prod;
 					product[i].add_prod(max_count_prod - quantity_prod_now);
-					return max_count_prod - quantity_prod_now;
+					return save;
 				}
 				quantity_prod_now += prod.get_count();
 				product[i].add_prod(prod.get_count());
-				return quantity_prod_now;
+				return prod.get_count();
 			}
 		}
 		if (i == product.size()) {
 			if ((prod.get_count() + quantity_prod_now) > max_count_prod) {
-				printf("Added only %d products! Storage is full!", max_count_prod - quantity_prod_now);
+				int save = max_count_prod - quantity_prod_now;
+				printf("Added only %d products! Storage is full!", save);
 				quantity_prod_now = max_count_prod;
+				prod.set_count(save);
 				product.push_back(prod);
-				return max_count_prod - quantity_prod_now;
+				return save;
 			}
 			quantity_prod_now += prod.get_count();
 			product.push_back(prod);
 		}
-		return quantity_prod_now;
+		return prod.get_count();
 	};
 
 	int sub_products(Product& prod) {
@@ -236,18 +237,18 @@ public:
 		for (; i < product.size(); i++) {
 			if (product[i] == prod) {
 				if (prod.get_count() > product[i].get_count()) {
-					printf("Subed only %d products! Storage is empty!", product[i].get_count());
+					int save = product[i].get_count();
+					printf("Subed only %d products! Storage is empty!", save);
 					product[i].set_count(0);
 					if (prod.get_count() > quantity_prod_now) {
 						quantity_prod_now = 0;
-						return 0;
 					}
-					quantity_prod_now -= prod.get_count();
-					return quantity_prod_now;
+					else quantity_prod_now -= prod.get_count();
+					return save;
 				}
 				quantity_prod_now -= prod.get_count();
 				product[i].sub_prod(prod.get_count());
-				return quantity_prod_now;
+				return prod.get_count();
 			}
 		}
 		if (i == product.size()) {
@@ -465,14 +466,17 @@ int main()
 		cout << "Нет ответа! Всего хорошего!\n";
 		return 0;
 	}
+	getline(cin, answer);
 
 	string name_storage;
 	cout << "Введите имя склад: ";
-	cin >> name_storage;
+	getline(cin, name_storage);
+
 
 	string address_storage;
 	cout << endl << "Введите адрес склада: ";
-	cin >> address_storage;
+	getline(cin, address_storage);
+
 
 	int count_area = 0;
 	cout << "Введите количество зон на складе: \n";
@@ -495,61 +499,58 @@ int main()
 	cin >> day >> month >> year;
 	Date today(day, month, year);
 
-	answer = "";
-	cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+	cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
+	string name;
+	int type, count;
 	while (cin >> answer) {
 		if (answer == "добавить") {
-			string name;
-			int type, count;
-			cout << endl << "Введите имя продукта, тип родукта и количество продуктов:\n";
 			cin >> name >> type >> count;
 			if (storage.add_products(name, type, count, today) == 1) {
-				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 			}
 			else {
 				cout << "\nПродукты добавлены\n";
-				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 			}
 		}
 		else if (answer == "изъять") {
-			string name;
-			int type, count;
-			cout << endl << "Введите имя продукта, тип родукта и количество продуктов:\n";
 			cin >> name >> type >> count;
 			if (storage.sub_products(name, type, count, today) == 1) {
-				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 			}
 			else {
 				cout << "\nПродукты изъяты\n";
-				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 			}
 		}
 		else if (answer == "узнать_количество") {
-			string name;
-			int type;
-			cout << endl << "Введите имя продукта и тип родукта:\n";
 			cin >> name >> type;
 			Product* prod = storage.find_prod(name, type);
 			if (prod != NULL) {
 				cout << prod;
-				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 			}
-			else cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			else cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 		}
 		else if (answer == "отчеты") {
 			for (int i = 1; i < storage.get_all_rep().size(); i++)
 			{
 				cout << storage.get_all_rep()[i];
 			}
-			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 		}
 		else if (answer == "выход") {
 			cout << "Всего хорошего!\n";
 			return 0;
 		}
+		else if (answer == "помощь") {
+			cout << "\n Вот что я умею:\n -- добавить имя тип количество\n -- изъять имя тип количество\n";
+			cout << "-- узнать_количество имя тип\n -- отчеты\n -- выход\n -- помощь\n";
+			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
+		}
 		else {
-			cout << "К сожалению, этого я ещё не умею ;(\n вот что я умею: добавить, изъять, узнать_количество, отчеты, выход\n";
-			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			cout << "К сожалению, этого я ещё не умею ;(\nиспользуйте помощь, чтобы узнать, что я умею\n";
+			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход, помощь)\n";
 		}
 	}
 	if (answer == "") {
