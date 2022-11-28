@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cctype>
 
 using namespace std;
 
@@ -84,8 +85,8 @@ public:
 	friend ostream& operator<<(ostream& r, Report& report)
 	{
 		if (&report == NULL) return r;
-		if (report.get_type() == 1) r << "\n" << "send\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date();
-		else r << "\n" << "delivery\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date();
+		if (report.get_type() == 1) r << "send\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date() << "\n";
+		else r << "delivery\t" << report.name_of_product << "\t" << report.get_count() << "\t" << report.get_send_date() << "\n";
 		return r;
 	}
 };
@@ -157,6 +158,12 @@ public:
 		if ((name == prod.name) || (this == &prod)) return 1;
 		return 0;
 	};
+
+	friend ostream& operator<<(ostream& r, Product* prod) {
+		if (&prod == NULL) return r;
+		cout << prod->get_name() << "\t" << prod->get_type() << "\t" << prod->get_count() << "\n";
+		return r;
+	}
 
 };
 
@@ -277,6 +284,7 @@ public:
 		if (i == product.size()) {
 			return NULL;
 		}
+		return NULL;
 	}
 
 };
@@ -284,12 +292,14 @@ public:
 
 class Storage
 {
+	string name;
 	string address;
 	vector<Area> area;
 	vector<Report> report;
 public:
-	Storage(string address_of_storage = "defolt", int count_of_area = 1, int max_count_of_prod = 999) {
+	Storage(string name_storage = "defolt", string address_of_storage = "defolt", int count_of_area = 1, int max_count_of_prod = 999) {
 		address = address_of_storage;
+		name = name_storage;
 
 		int new_max_count_of_prod = 0;
 		if (max_count_of_prod < 0) {
@@ -312,6 +322,20 @@ public:
 		}
 		Report rep;
 		report.push_back(rep);
+	}
+
+	void set_name(string new_name) {
+		name = new_name;
+	}
+	string get_name() {
+		return name;
+	}
+
+	void set_address(string new_address) {
+		address = new_address;
+	}
+	string get_address() {
+		return address;
 	}
 
 	void change_type_area(int old_type, int new_type) {
@@ -346,7 +370,7 @@ public:
 		}
 	}
 
-	void add_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
+	int add_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
 		if (count_of_product < 0) return sub_products(name_of_product, type_of_product, -count_of_product, date);
 
 		int i = 0;
@@ -356,15 +380,17 @@ public:
 				int new_count = area[i].add_products(new_prod);
 				Report new_report(name_of_product, new_count, 0, date.get_day(), date.get_month(), date.get_year());
 				report.push_back(new_report);
-				return;
+				return 0;
 			}
 		}
 		if (i == area.size()) {
 			printf("This type '%d' is not found!", type_of_product);
+			return 1;
 		}
+		return 0;
 	}
 
-	void sub_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
+	int sub_products(string name_of_product, int type_of_product, int count_of_product, Date date) {
 		if (count_of_product < 0) return add_products(name_of_product, type_of_product, -count_of_product, date);
 
 		int i = 0;
@@ -374,12 +400,14 @@ public:
 				int new_count = area[i].sub_products(new_prod);
 				Report new_report(name_of_product, new_count, 1, date.get_day(), date.get_month(), date.get_year());
 				report.push_back(new_report);
-				return;
+				return 0;
 			}
 		}
 		if (i == area.size()) {
 			printf("This type '%d' is not found!", type_of_product);
+			return 1;
 		}
+		return 0;
 	}
 
 	vector<Report> get_all_rep() { return report; }
@@ -393,39 +421,137 @@ public:
 		}
 		if (i == area.size()) {
 			printf("This type '%d' is not found!", _type);
+			return NULL;
 		}
+		return NULL;
 	}
 
-	Product* find_prod(string _name) {
+	vector <Product>* find_prod(string _name, vector <Product>& prod) {
 		int i = 0;
 		for (; i < area.size(); i++) {
 			Product* find;
 			find = area[i].find_product(_name);
 			if (find != NULL) {
-				return area[i].find_product(_name);
+				prod.push_back(*find);
 			}
 		}
 		if (i == area.size()) {
 			cout << "Product " << _name << " not found\n";
+			return NULL;
 		}
+		return &prod;
 	}
 };
 
 
 int main()
 {
-	Storage storage("Tosmk", 3);
-	Date today(24, 11, 2022);
-	Date tomorrow(25, 11, 2022);
+	string answer;
+	cout << "Привет! Я готова к работе!\n" << "Хотите создать склад? (да/нет)\n";
+	while (cin >> answer) {
+		if (answer == "нет") {
+			cout << endl << "Завершение работы...\n";
+			return 0;
+		}
+		if (answer == "да") {
+			break;
+		}
+		cout << "да/нет\t" << "Вы ввели: " << answer << endl;
+	}
+	if (answer == "") {
+		cout << "Нет ответа! Всего хорошего!\n";
+		return 0;
+	}
 
-	storage.add_products("table", 1, 17, today);
-	storage.add_products("fork", 2, 789, today);
+	string name_storage;
+	cout << "Введите имя склад: ";
+	cin >> name_storage;
 
-	storage.sub_products("table", 1, 10, tomorrow);
+	string address_storage;
+	cout << endl << "Введите адрес склада: ";
+	cin >> address_storage;
 
-	for (int i = 1; i < storage.get_all_rep().size(); i++)
-	{
-		cout << storage.get_all_rep()[i];
+	int count_area = 0;
+	cout << "Введите количество зон на складе: \n";
+	while (cin >> count_area) {
+		if (count_area == 0) {
+			cout << endl << "На складе должна быть минимум одна зона! Повторите попытку.\n";
+		}
+		else if (count_area < 0) {
+			cout << endl << "На складе не может быть отрицательно количество зон! Повторите попытку.\n";
+		}
+		else break;
+	}
+
+	Storage storage(name_storage, address_storage, count_area);
+
+	cout << "\nСклад успешно создан!\n";
+
+	int day, month, year;
+	cout << "Введите сегодняшнюю дату (день месяц год): ";
+	cin >> day >> month >> year;
+	Date today(day, month, year);
+
+	answer = "";
+	cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+	while (cin >> answer) {
+		if (answer == "добавить") {
+			string name;
+			int type, count;
+			cout << endl << "Введите имя продукта, тип родукта и количество продуктов:\n";
+			cin >> name >> type >> count;
+			if (storage.add_products(name, type, count, today) == 1) {
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			}
+			else {
+				cout << "\nПродукты добавлены\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			}
+		}
+		else if (answer == "изъять") {
+			string name;
+			int type, count;
+			cout << endl << "Введите имя продукта, тип родукта и количество продуктов:\n";
+			cin >> name >> type >> count;
+			if (storage.sub_products(name, type, count, today) == 1) {
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			}
+			else {
+				cout << "\nПродукты изъяты\n";
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			}
+		}
+		else if (answer == "узнать_количество") {
+			string name;
+			int type;
+			cout << endl << "Введите имя продукта и тип родукта:\n";
+			cin >> name >> type;
+			Product* prod = storage.find_prod(name, type);
+			if (prod != NULL) {
+				cout << prod;
+				cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+			}
+			else cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+		}
+		else if (answer == "отчеты") {
+			for (int i = 1; i < storage.get_all_rep().size(); i++)
+			{
+				cout << storage.get_all_rep()[i];
+			}
+			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+		}
+		else if (answer == "выход") {
+			cout << "Всего хорошего!\n";
+			return 0;
+		}
+		else {
+			cout << "К сожалению, этого я ещё не умею ;(\n вот что я умею: добавить, изъять, узнать_количество, отчеты, выход\n";
+			cout << "\nИ так, что вы хотите сделать? (добавить, изъять, узнать_количество, отчеты, выход)\n";
+		}
+	}
+	if (answer == "") {
+		cout << "Нет ответа! Всего хорошего!\n";
+		return 0;
 	}
 
 	return 0;
