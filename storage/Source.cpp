@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <locale.h>
 
 using namespace std;
 
@@ -446,6 +447,8 @@ public:
 
 int main()
 {
+	setlocale(LC_ALL, "Russian");
+	system("chcp 1251");
 	string answer;
 	cout << "Привет! Я готова к работе!\n" << "Хотите создать склад? (да/нет)\n";
 	while (cin >> answer) {
